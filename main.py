@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException, Response
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
+from random import randrange
+
 #create an intstance of fastapi
 app = FastAPI()
 
@@ -11,6 +13,23 @@ class Post(BaseModel):
     published: bool = True
     rating: Optional[int] = 0
 
+#store posts in memory variable array
+my_posts = [
+    {"title": "My 1st post", "content" : "contents to my 1st post", "id": 1}, 
+    {"title": "My 2nd post", "content" : "contents to my 2nd post", "id": 2},
+    {"title": "My 3rd post", "content" : "contents to my 3rd post", "id": 3}
+]
+
+def find_post(id):
+    for p in my_posts:
+        if p["id"] == id:
+            return p
+
+def find_post_index(id):
+    for i, p in enumerate(my_posts):
+        if p["id"] == id:
+            return i
+
 #create a route = a decorator + a function logic
 @app.get("/")
 def root():
@@ -19,13 +38,47 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": "Your Post"}
+    return {"items": my_posts}
 
-@app.post("/createposts")
+@app.get("/posts/{id}")
+def get_post_by_id(id: int):
+    post = find_post(id)
+    if not post:
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
+    return {"item": post}
+
+
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
-    print(post)
-    print(post.dict())
-    return {"items": post }
+    post_dict = post.dict()
+    post_dict["id"] = randrange(0, 100000)
+    my_posts.append(post_dict)
+    return {"items": post_dict}
+
+
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    post = find_post_index(id)
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
+    my_posts.pop(post)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    index = find_post_index(id)
+
+    if index is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
+
+    post_dict = post.dict()
+
+    post_dict["id"] = id
+
+    my_posts[index] = post_dict
+
+    return {"updated_post": my_posts}
+    
 
 
 # create post data expected = title str, content str
