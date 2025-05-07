@@ -55,7 +55,9 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"items": my_posts}
+    cursor.execute(""" SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    return {"items": posts}
 
 @app.get("/posts/{id}")
 def get_post_by_id(id: int):
