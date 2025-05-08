@@ -61,7 +61,8 @@ def get_posts():
 
 @app.get("/posts/{id}")
 def get_post_by_id(id: int):
-    post = find_post(id)
+    cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id),))
+    post = cursor.fetchone()
     if not post:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
     return {"item": post}
@@ -69,34 +70,39 @@ def get_post_by_id(id: int):
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
-    post_dict = post.dict()
-    post_dict["id"] = randrange(0, 100000)
-    my_posts.append(post_dict)
-    return {"items": post_dict}
+    cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", (
+        post.title, post.content, post.published))
+
+    new_post = cursor.fetchone()
+
+    conn.commit()
+
+    return {"items": new_post}
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    post = find_post_index(id)
-    if post is None:
+    #sql command
+    cursor.execute("""DELETE FROM posts where id = %s RETURNING *""", (str(id),))
+    #fetch deleted post
+    deleted_post = cursor.fetchone()
+    #update db
+    conn.commit()
+    if deleted_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
-    my_posts.pop(post)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
-    index = find_post_index(id)
+    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """, (post.title, post.content, post.published, str(id)))
+    updated_post = cursor.fetchone()
 
-    if index is None:
+    conn.commit()
+
+    if updated_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found")
 
-    post_dict = post.dict()
-
-    post_dict["id"] = id
-
-    my_posts[index] = post_dict
-
-    return {"updated_post": my_posts}
+    return {"updated_post": updated_post}
     
 
 
