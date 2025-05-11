@@ -4,6 +4,7 @@ import psycopg2
 import time
 from . import models
 from .database import engine
+from .routers import users, posts
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -21,6 +22,9 @@ while True:
         print("Connection to database failed")
         print("Error", error)
         time.sleep(2)
+
+app.include_router(posts.router)
+app.include_router(users.router)
 
 #start the webserver using uvicorn = uvicorn main:app --reload (development env) uvicorn main:app(prod env)
 
