@@ -4,7 +4,7 @@ import psycopg2
 import time
 from . import models
 from .database import engine
-from .routers import users, posts
+from .routers import users, posts, auth
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -25,6 +25,7 @@ while True:
 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)
 
 #start the webserver using uvicorn = uvicorn main:app --reload (development env) uvicorn main:app(prod env)
 
