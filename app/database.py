@@ -16,6 +16,7 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 #create a session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 #define a base class
 Base = declarative_base()
 
