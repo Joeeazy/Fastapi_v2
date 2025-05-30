@@ -26,7 +26,7 @@ app.include_router(vote.router)
 
 @app.get("/")
 def hello():
-    return {"message" :"Hello world"}
+    return {"message" :"Hello world!!!!"}
 
 #start the webserver using uvicorn = uvicorn main:app --reload (development env) uvicorn main:app(prod env)
 
